@@ -280,7 +280,7 @@
               
                 
                 <a class="post-title-link" href="/2017/03/10/基于MVP模式搭建Android应用/" itemprop="url">
-                  基于MVP模式搭建Android应用
+                  基于MVP模式搭建的Android应用
                 </a>
               
             
@@ -356,8 +356,7 @@
       
         
           
-            <p>#基于MVP设计的Android框架</p>
-<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这边博客是我个人的处女作，想了很久要以什么作为我博客的第一篇文章，最后选择了写下这篇关于MVP的架构的内容，当中也是有些原因的：<br>我是去年毕业的，到目前为止算算日子在现在这家公司也已经工作了一年多了，作为一个新人我到公司之后首先就是要从零开始做一些他们终端里面的应用。在我还是学生接触Android的一段时间里都是传统的MVC的方式搭建一个应用，经过一番了解到了MVC并不是很适合移动端的开发，而目前比较主流的方式是MVP和MVVM，因此也是从这个时候开始学习MVP这种架构的思路，所以决定写下这篇入门MVP的文章，各位看客轻拍哦。</p>
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这篇博客是我个人的处女作，想了很久要以什么作为我博客的第一篇文章，最后选择了写下这篇关于MVP的架构的内容，当中也是有些原因的：<br>我是去年毕业的，到目前为止算算日子在现在这家公司也已经工作了一年多了，作为一个新人我到公司之后首先就是要从零开始做一些他们终端里面的应用。在我还是学生接触Android的一段时间里都是传统的MVC的方式搭建一个应用，经过一番了解到了MVC并不是很适合移动端的开发，而目前比较主流的方式是MVP和MVVM，因此也是从这个时候开始学习MVP这种架构的思路，所以决定写下这篇入门MVP的文章，各位看客轻拍哦。</p>
 <h2 id="谈谈MVP"><a href="#谈谈MVP" class="headerlink" title="谈谈MVP"></a>谈谈MVP</h2><p>在网络上关于什么MVP、MVVM之类的已经很多很好的文章说明了这些模式之间的区别与优劣势，在这里我也就不班门弄斧了，主要谈谈我对MVP的一些认识。</p>
 <p>说到MVP就不得不说一下传统的MVC模式，首先先放上一张在google里搜的关于两种模式的图：</p>
 <p><img src="http://frodoking.github.io/img/android/mvp_mvc_img.png" alt=""></p>
@@ -374,7 +373,12 @@
 <li>容易导致在Presenter中做过多的工作，看起来比较冗余；</li>
 <li>过多的接口会显得代码量增大；</li>
 </ul>
-<h2 id="EasyMvpBuilder"><a href="#EasyMvpBuilder" class="headerlink" title="EasyMvpBuilder"></a>EasyMvpBuilder</h2>
+<h2 id="EasyMvpBuilder"><a href="#EasyMvpBuilder" class="headerlink" title="EasyMvpBuilder"></a>EasyMvpBuilder</h2><p>在接下来的工程里我会调用豆瓣一个的Api来说明这个过程，各位同学们可以先把<a href="https://github.com/AlexMagic/EasyMvpBuilder" target="_blank" rel="external">EasyMvpBuilder</a>这个工程clone下来看看。</p>
+<p>首先看一下easy_mvp这个module的包结构：<br><img src="/Users/Alex/Desktop/屏幕快照 2017-03-10 23.17.30.png" alt=""></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">base : View和Presenter的基本接口</div><div class="line">interactor : 交互器集合，用来处理网络交互的过程</div><div class="line">model : 基本模型</div><div class="line">net : </div><div class="line">  api:处理网络请求</div><div class="line">  okHttp:对okHttp请求和响应数据的封装</div><div class="line">utils :工具包</div></pre></td></tr></table></figure>
+<p>以下是该框架用到的第三方的库</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">compile &apos;com.google.code.gson:gson:2.3.1&apos;</div><div class="line">compile &apos;com.squareup.okhttp:okhttp:2.5.0&apos;</div><div class="line">compile &apos;io.reactivex:rxjava:1.0.14&apos;</div><div class="line">compile &apos;io.reactivex:rxandroid:1.0.1&apos;</div></pre></td></tr></table></figure>
+
           
         
       
