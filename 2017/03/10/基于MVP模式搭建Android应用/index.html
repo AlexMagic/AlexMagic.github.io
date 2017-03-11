@@ -103,7 +103,7 @@
 <meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_app.png?raw=true">
 <meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/app_activity.png?raw=true">
 <meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/app_presenter.png?raw=true">
-<meta property="og:updated_time" content="2017-03-11T07:25:27.000Z">
+<meta property="og:updated_time" content="2017-03-11T08:04:26.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="基于MVP模式搭建的Android应用">
 <meta name="twitter:description" content="前言这篇博客是我个人的处女作，想了很久要以什么作为我博客的第一篇文章，最后选择了写下这篇关于MVP的架构的内容，当中也是有些原因的：我是去年毕业的，到目前为止算算日子在现在这家公司也已经工作了一年多了，作为一个新人我到公司之后首先就是要从零开始做一些他们终端里面的应用。在我还是学生接触Android的一段时间里都是传统的MVC的方式搭建一个应用，经过一番了解到了MVC并不是很适合移动端的开发，而目">
@@ -378,7 +378,7 @@
 <h2 id="谈谈MVP"><a href="#谈谈MVP" class="headerlink" title="谈谈MVP"></a>谈谈MVP</h2><p>在网络上关于什么MVP、MVVM之类的已经很多很好的文章说明了这些模式之间的区别与优劣势，在这里我也就不班门弄斧了，主要谈谈我对MVP的一些认识。</p>
 <p>说到MVP就不得不说一下传统的MVC模式，首先先放上一张在google里搜的关于两种模式的图：</p>
 <p><img src="http://frodoking.github.io/img/android/mvp_mvc_img.png" alt=""></p>
-<p>回想一下过去不管是实际的项目还是自己学习练手的工程，不知道有没有一种感觉就是虽然使用了MVC的思路在写代码，但是会发现在Activity中会有大量的业务逻辑冗余在其中，这是因为Activity在MVC中扮演的Controller的角色，而Android架构本身的原因，需要在主线程根据接口返回的数据绘制的View上，导致Activity与Model产生了过多的联系很多操作都耦合在了Activity中，不论是看起来还是写起来既不好看也不好维护，比较理想的情况是View层里面应用只关心UI之间的交互，而不应该直接的Model产生联系。而MVP的核心思想就是不让View和Model直接关联，而是通过Presenter贯穿两者之间。</p>
+<p>回想一下过去不管是实际的项目还是自己学习练手的工程，不知道有没有一种感觉就是虽然使用了MVC的思路在写代码，但是会发现在Activity中会有大量的业务逻辑冗余在其中，这是因为Activity在MVC中扮演的Controller的角色，而Android架构本身的原因，需要在主线程根据接口返回的数据绘制的View上，导致View与Model产生了过多的联系很多操作都耦合在了Activity中，不论是看起来还是写起来既不好看也不好维护，比较理想的情况是View层里面应用只关心UI之间的交互，而不应该直接的Model产生联系。而MVP的核心思想就是不让View和Model直接关联，而是通过Presenter贯穿两者之间。</p>
 <p>可以看出MVP的优点：</p>
 <ul>
 <li>思路会比较的清晰，因为每个部分都彼此分离，模块之间的耦合度减小；</li>
