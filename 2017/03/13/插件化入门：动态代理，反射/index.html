@@ -1,0 +1,673 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="本篇会讲述两个基本的概念，一个是动态代理，一个是反射，这两个是你可以认为是实现插件化的最基本的工具，如果你已经有过了解甚至是已经有一定的理解，那你可以跳过这一篇。
+目前比较流行的插件化的做法之一就是通过动态代理和反射，进而hook系统中的各种Api服务达到为我所用的地步，插件化的一个重要的思路就是能够欺骗系统来完成动态加载的过程。
+代理先从Wiki上复制一段定义：
+123所谓代理者是指一个类可以作">
+<meta property="og:type" content="article">
+<meta property="og:title" content="插件化入门：动态代理，反射">
+<meta property="og:url" content="http://AlexMagic.github.io/2017/03/13/插件化入门：动态代理，反射/index.html">
+<meta property="og:site_name" content="Alex's Blogs">
+<meta property="og:description" content="本篇会讲述两个基本的概念，一个是动态代理，一个是反射，这两个是你可以认为是实现插件化的最基本的工具，如果你已经有过了解甚至是已经有一定的理解，那你可以跳过这一篇。
+目前比较流行的插件化的做法之一就是通过动态代理和反射，进而hook系统中的各种Api服务达到为我所用的地步，插件化的一个重要的思路就是能够欺骗系统来完成动态加载的过程。
+代理先从Wiki上复制一段定义：
+123所谓代理者是指一个类可以作">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Proxy_pattern_diagram.svg/439px-Proxy_pattern_diagram.svg.png">
+<meta property="og:updated_time" content="2017-03-13T10:08:18.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="插件化入门：动态代理，反射">
+<meta name="twitter:description" content="本篇会讲述两个基本的概念，一个是动态代理，一个是反射，这两个是你可以认为是实现插件化的最基本的工具，如果你已经有过了解甚至是已经有一定的理解，那你可以跳过这一篇。
+目前比较流行的插件化的做法之一就是通过动态代理和反射，进而hook系统中的各种Api服务达到为我所用的地步，插件化的一个重要的思路就是能够欺骗系统来完成动态加载的过程。
+代理先从Wiki上复制一段定义：
+123所谓代理者是指一个类可以作">
+<meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Proxy_pattern_diagram.svg/439px-Proxy_pattern_diagram.svg.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"remove","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '6396137648292890000',
+      author: 'Alex'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://AlexMagic.github.io/2017/03/13/插件化入门：动态代理，反射/"/>
+
+
+
+
+
+  <title> 插件化入门：动态代理，反射 | Alex's Blogs </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Alex's Blogs</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://AlexMagic.github.io/2017/03/13/插件化入门：动态代理，反射/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Alex Chen">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Alex's Blogs">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                插件化入门：动态代理，反射
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-03-13T10:23:15+08:00">
+                2017-03-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/插件化/" itemprop="url" rel="index">
+                    <span itemprop="name">插件化</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/03/13/插件化入门：动态代理，反射/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/03/13/插件化入门：动态代理，反射/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本篇会讲述两个基本的概念，一个是动态代理，一个是反射，这两个是你可以认为是实现插件化的最基本的工具，如果你已经有过了解甚至是已经有一定的理解，那你可以跳过这一篇。</p>
+<p>目前比较流行的插件化的做法之一就是通过动态代理和反射，进而hook系统中的各种Api服务达到为我所用的地步，插件化的一个重要的思路就是能够欺骗系统来完成动态加载的过程。</p>
+<h1 id="代理"><a href="#代理" class="headerlink" title="代理"></a>代理</h1><p>先从Wiki上复制一段定义：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">所谓代理者是指一个类可以作为其他东西的接口。代理者可以作任何东西的接口, 例如网络连接， 存储器中的大对象，文件或者其他无法复制的资源。</div><div class="line"></div><div class="line">著名的代理模式的例子就是引用计数(reference counting): 当需要一个复杂对象的多份副本时， 代理模式可以结合享元模式以减少存储器的用量。典型做法是创建一个复杂对象以及多个代理者， 每个代理者会引用到原本的对象。而作用在代理者的运算会转送到原本对象。一旦所有的代理者都不存在时， 复杂对象会被移除。</div></pre></td></tr></table></figure>
+<h3 id="静态代理"><a href="#静态代理" class="headerlink" title="静态代理"></a>静态代理</h3><p>所谓静态代理， 就是在编译阶段就生成代理类来完成对代理对象的一系列操作。下面是代理模式的结构类图：<br><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Proxy_pattern_diagram.svg/439px-Proxy_pattern_diagram.svg.png" alt=""></p>
+<p>从图中可以发现，关于代理模式的有四个基本的角色：</p>
+<ul>
+<li>主题接口：定义了代理角色和真实角色具有的共同的行为；</li>
+<li>真实主题角色：实现了主题接口的具体行为；</li>
+<li>代理主题角色：同样实现了主题接口，但是实现的实际上真实主题的行为，在实现代理的过程中可以在真实行为前后定义自己的方法；</li>
+<li>客户端角色</li>
+</ul>
+<p>对应上面的角色以下用java的代码做一个简单的演示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">interface</span> <span class="title">Subject</span></span>&#123;</div><div class="line">	<span class="function"><span class="keyword">void</span> <span class="title">request</span><span class="params">()</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">RealSubject</span> <span class="keyword">implements</span> <span class="title">Subject</span></span>&#123;</div><div class="line">	</div><div class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> test = <span class="number">1</span>;</div><div class="line">	</div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">request</span><span class="params">()</span> </span>&#123;</div><div class="line">		<span class="comment">// TODO Auto-generated method stub</span></div><div class="line">		System.out.println(<span class="string">"The real subject request."</span>);</div><div class="line">	&#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">RealSubject</span> <span class="keyword">implements</span> <span class="title">Subject</span></span>&#123;</div><div class="line">	</div><div class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> test = <span class="number">1</span>;</div><div class="line">	</div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">request</span><span class="params">()</span> </span>&#123;</div><div class="line">		<span class="comment">// TODO Auto-generated method stub</span></div><div class="line">		System.out.println(<span class="string">"The real subject request."</span>);</div><div class="line">	&#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProxySubject</span> <span class="keyword">implements</span> <span class="title">Subject</span></span>&#123;</div><div class="line"></div><div class="line">	<span class="keyword">private</span> RealSubject realSubject = <span class="keyword">new</span> RealSubject(); </div><div class="line">	</div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">request</span><span class="params">()</span> </span>&#123;</div><div class="line">		<span class="comment">// TODO Auto-generated method stub</span></div><div class="line">		beforeRequest();</div><div class="line">		</div><div class="line">		realSubject.request();</div><div class="line">		</div><div class="line">		afterRequest();</div><div class="line">		</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">beforeRequest</span><span class="params">()</span></span>&#123;</div><div class="line">		System.out.println(<span class="string">"before request!!!"</span>);</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">afterRequest</span><span class="params">()</span></span>&#123;</div><div class="line">		System.out.println(<span class="string">"after request!!!"</span>);</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestProxy</span> </span>&#123;</div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">		ProxySubject proxy = <span class="keyword">new</span> ProxySubject();</div><div class="line">		proxy.request();</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="动态代理"><a href="#动态代理" class="headerlink" title="动态代理"></a>动态代理</h3><p>实际上在java中为我们提供了可以实现动态代理的接口和类，动态代理利用Java的反射技术，在运行时创建一个实现某些给定接口的动态代理类及其实例。在动态代理中有两个重要的接口和类：</p>
+<ul>
+<li><strong>InvocationHandler</strong>：<br>这个接口是动态代理类需要实现的一个接口，接口中定义了一个方法：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable</span>;</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">proxy:指代理类；</div><div class="line">method:被代理的方法；</div><div class="line">args:指方法中的参数集合；</div></pre></td></tr></table></figure>
+<p>它的作用类似于创建上面静态代理中ProxySubject。</p>
+<ul>
+<li><strong>Proxy</strong>：<br>这个类是jdk提供给我们可以动态的创建代理对象的，类中提供了一个可以创建出代理对象的方法</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">newProxyInstance</span><span class="params">(ClassLoader loader, Class&lt;?&gt;[] interfaces,InvocationHandler invocationHandler)</span> <span class="keyword">throws</span> IllegalArgumentException</span></div></pre></td></tr></table></figure>
+<p>基于静态代理的例子，我们把ProxySubject改一下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProxyHandler</span> <span class="keyword">implements</span> <span class="title">InvocationHandler</span></span>&#123;</div><div class="line"></div><div class="line">	<span class="keyword">private</span> Subject subject;</div><div class="line">	</div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="title">ProxyHandler</span><span class="params">(Subject subject)</span> </span>&#123;</div><div class="line">		<span class="comment">// TODO Auto-generated constructor stub</span></div><div class="line">		<span class="keyword">this</span>.subject = subject;</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</div><div class="line">		<span class="comment">// TODO Auto-generated method stub</span></div><div class="line">		System.out.println(<span class="string">"before request!!!"</span>);</div><div class="line">		</div><div class="line">		Object result = method.invoke(subject, args);</div><div class="line">		</div><div class="line">		System.out.println(<span class="string">"after request!!!"</span>);</div><div class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestProxy</span> </span>&#123;</div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line"><span class="comment">//		ProxySubject proxy = new ProxySubject();</span></div><div class="line"><span class="comment">//		proxy.request();</span></div><div class="line">		<span class="keyword">try</span> &#123;</div><div class="line">			Subject subject = (Subject) Proxy.newProxyInstance(ClassLoader.getSystemClassLoader()</div><div class="line">				, RealSubject.class.getInterfaces()</div><div class="line">				, <span class="keyword">new</span> ProxyHandler(<span class="keyword">new</span> RealSubject()));</div><div class="line">			subject.request();</div><div class="line">		&#125; <span class="keyword">catch</span> (Exception e) &#123;</div><div class="line">			<span class="comment">// <span class="doctag">TODO:</span> handle exception</span></div><div class="line">		&#125;</div><div class="line">		</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>运行之后就能看出和静态代理执行的效果是一样的。</p>
+<h1 id="反射"><a href="#反射" class="headerlink" title="反射"></a>反射</h1><p>Java反射机制是指在运行状态中，对于任意一个类，都能够知道这个类的所有属性和方法；对于任意一个对象，都能够调用它的任意一个方法和属性；这种动态获取的信息以及动态调用对象的方法的功能称为java语言的反射机制。<br>用一句话总结就是反射可以实现在运行时可以知道任意一个类的属性和方法。</p>
+<p>java在java.lang.reflect包中提供了所有反射用到的类，下列介绍几个核心类：</p>
+<ul>
+<li>Class：代表一个类</li>
+<li>Field：代表了类中的成员变量</li>
+<li>Mehod：代表一个类中的方法</li>
+<li>Constructor：代表类的构造方法</li>
+</ul>
+<h3 id="核心Api"><a href="#核心Api" class="headerlink" title="核心Api"></a>核心Api</h3><ul>
+<li>获取构造方法（Constructor）：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Constructor getConstructor(Class[] params): 根据构造函数的参数，返回一个具体的具有public属性的构造函数;</div><div class="line">Constructor getConstructors(): 返回所有具有public属性的构造函数数组;</div><div class="line">Constructor getDeclaredConstructor(Class[] params): 根据构造函数的参数，返回一个具体的构造函数（不分public和非public属性）;</div><div class="line">Constructor getDeclaredConstructors(): 返回该类中所有的构造函数数组（不分public和非public属性）;</div></pre></td></tr></table></figure>
+<ul>
+<li>获取类的成员方法（Mehod）：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Method getMethod(String name, Class[] parameterTypes): 根据方法名和参数，返回一个具体的具有public属性的方法;</div><div class="line">Method[] getMethods(): 返回所有具有public属性的方法数组;</div><div class="line">Method getDeclaredMethod(String name, Class[] params): 根据方法名和参数，返回一个具体的方法（不分public和非public属性）;</div><div class="line">Method[] getDeclaredMethods(): 返回该类中的所有的方法数组(不分public和非public属性),不包含继承来的方法;</div></pre></td></tr></table></figure>
+<ul>
+<li>获取类的成员变量（Field）：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Field getField(String name) 根据变量名，返回一个具体的具有public属性的成员变量;</div><div class="line">Field[] getFields() 返回具有public属性的成员变量的数组;</div><div class="line">Field getDeclaredField(String name) 根据变量名，返回一个成员变量（不分public和非public属性);</div><div class="line">Field[] getDelcaredField() 返回所有成员变量组成的数组（不分public和非public属性）;</div></pre></td></tr></table></figure>
+<h1 id="动态代理和反射在插件化中的应用"><a href="#动态代理和反射在插件化中的应用" class="headerlink" title="动态代理和反射在插件化中的应用"></a>动态代理和反射在插件化中的应用</h1><p>对于想要hook一些系统api的时候 并不是所有的接口都是开放的，但是又需要去做一些修改，这是就需要通过反射来获取这些需要修改的对象，在DroidPlugin中的reflect包里封装了关于反射的一些功能，例如在这个框架的初始化过程中有一个安装个中国系统服务的过程(其实就是hook掉系统的服务)，其中都要执行一个onInstall方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onInstall</span><span class="params">(ClassLoader classLoader)</span> <span class="keyword">throws</span> Throwable </span>&#123;</div><div class="line">    <span class="keyword">new</span> ServiceManagerCacheBinderHook(mHostContext, getServiceName()).onInstall(classLoader);</div><div class="line">    mOldObj = getOldObj();</div><div class="line">    Class&lt;?&gt; clazz = mOldObj.getClass();</div><div class="line">    List&lt;Class&lt;?&gt;&gt; interfaces = Utils.getAllInterfaces(clazz);</div><div class="line">    Class[] ifs = interfaces != <span class="keyword">null</span> &amp;&amp; interfaces.size() &gt; <span class="number">0</span> ? interfaces.toArray(<span class="keyword">new</span> Class[interfaces.size()]) : <span class="keyword">new</span> Class[<span class="number">0</span>];</div><div class="line">    Object proxiedObj = MyProxy.newProxyInstance(clazz.getClassLoader(), ifs, <span class="keyword">this</span>);</div><div class="line">    MyServiceManager.addProxiedObj(getServiceName(), proxiedObj);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这里就利用了动态代理和反射实现了对系统服务的替换，至于具体是怎么替换以及为什么选择这里替换将会在后面分析DroidPlugin的源码中讲述。</p>
+<h1 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h1><p>本篇主要就是介绍了一些动态代理和反射的概念，主要是对后面的内容起个铺垫作用，如果想更加深入的了解这里推荐大家看一下IBM developerWorks里面关于反射的<a href="https://www.ibm.com/developerworks/cn/java/j-dyn0429/" target="_blank" rel="external">介绍</a>。</p>
+<p>感谢看到最后，欢迎各位提出宝贵的意见和纠正错误，共同学习。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/03/12/Android插件化基础/" rel="next" title="Android插件化基础概念">
+                <i class="fa fa-chevron-left"></i> Android插件化基础概念
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/03/13/插件化入门：动态代理，反射/"
+           data-title="插件化入门：动态代理，反射" data-url="http://AlexMagic.github.io/2017/03/13/插件化入门：动态代理，反射/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Alex Chen</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"alexgo"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+      
+      <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+      <script src="/js/src/hook-duoshuo.js?v=5.1.0"></script>
+    
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+</body>
+</html>
