@@ -1,0 +1,649 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="前言这篇博客是我个人的处女作，想了很久要以什么作为我博客的第一篇文章，最后选择了写下这篇关于MVP的架构的内容，当中也是有些原因的：我是今年毕业的，到目前为止算算日子在现在这家公司也已经工作了一段时间了，作为一个新人我到公司之后首先就是要从零开始做一些他们终端里面的应用。在我还是学生接触Android的一段时间里都是传统的MVC的方式搭建一个应用，经过一番了解到了MVC并不是很适合移动端的开发，而">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于MVP模式搭建的Android应用">
+<meta property="og:url" content="http://AlexMagic.github.io/2016/11/10/基于MVP模式搭建Android应用/index.html">
+<meta property="og:site_name" content="Alex's Blogs">
+<meta property="og:description" content="前言这篇博客是我个人的处女作，想了很久要以什么作为我博客的第一篇文章，最后选择了写下这篇关于MVP的架构的内容，当中也是有些原因的：我是今年毕业的，到目前为止算算日子在现在这家公司也已经工作了一段时间了，作为一个新人我到公司之后首先就是要从零开始做一些他们终端里面的应用。在我还是学生接触Android的一段时间里都是传统的MVC的方式搭建一个应用，经过一番了解到了MVC并不是很适合移动端的开发，而">
+<meta property="og:image" content="http://frodoking.github.io/img/android/mvp_mvc_img.png">
+<meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp.png?raw=true">
+<meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp_apiconnect.png?raw=true">
+<meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp_api.png?raw=true">
+<meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp_default_api.png?raw=true">
+<meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp_usecase.png?raw=true">
+<meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp_default_usecase.png?raw=true">
+<meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_app.png?raw=true">
+<meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/app_activity.png?raw=true">
+<meta property="og:image" content="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/app_presenter.png?raw=true">
+<meta property="og:updated_time" content="2017-03-14T02:29:08.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于MVP模式搭建的Android应用">
+<meta name="twitter:description" content="前言这篇博客是我个人的处女作，想了很久要以什么作为我博客的第一篇文章，最后选择了写下这篇关于MVP的架构的内容，当中也是有些原因的：我是今年毕业的，到目前为止算算日子在现在这家公司也已经工作了一段时间了，作为一个新人我到公司之后首先就是要从零开始做一些他们终端里面的应用。在我还是学生接触Android的一段时间里都是传统的MVC的方式搭建一个应用，经过一番了解到了MVC并不是很适合移动端的开发，而">
+<meta name="twitter:image" content="http://frodoking.github.io/img/android/mvp_mvc_img.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"remove","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '6396137648292890000',
+      author: 'Alex'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://AlexMagic.github.io/2016/11/10/基于MVP模式搭建Android应用/"/>
+
+
+
+
+
+  <title> 基于MVP模式搭建的Android应用 | Alex's Blogs </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Alex's Blogs</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://AlexMagic.github.io/2016/11/10/基于MVP模式搭建Android应用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Alex Chen">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Alex's Blogs">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                基于MVP模式搭建的Android应用
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-11-10T23:09:03+08:00">
+                2016-11-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2016/11/10/基于MVP模式搭建Android应用/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/11/10/基于MVP模式搭建Android应用/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这篇博客是我个人的处女作，想了很久要以什么作为我博客的第一篇文章，最后选择了写下这篇关于MVP的架构的内容，当中也是有些原因的：<br>我是今年毕业的，到目前为止算算日子在现在这家公司也已经工作了一段时间了，作为一个新人我到公司之后首先就是要从零开始做一些他们终端里面的应用。在我还是学生接触Android的一段时间里都是传统的MVC的方式搭建一个应用，经过一番了解到了MVC并不是很适合移动端的开发，而目前比较主流的方式是MVP和MVVM，因此也是从这个时候开始学习MVP这种架构的思路，所以决定写下这篇入门MVP的文章，初次写稿肯定会有很多不好的地方，希望你们即便不喜欢也能假装喜欢的样子，各位看客轻拍哦。</p>
+<h2 id="谈谈MVP"><a href="#谈谈MVP" class="headerlink" title="谈谈MVP"></a>谈谈MVP</h2><p>在网络上关于什么MVP、MVVM之类的已经很多很好的文章说明了这些模式之间的区别与优劣势，在这里我也就不班门弄斧了，主要谈谈我对MVP的一些认识。</p>
+<p>说到MVP就不得不说一下传统的MVC模式，首先先放上一张在google里搜的关于两种模式的图：</p>
+<p><img src="http://frodoking.github.io/img/android/mvp_mvc_img.png" alt=""></p>
+<p>回想一下过去不管是实际的项目还是自己学习练手的工程，不知道有没有一种感觉就是虽然使用了MVC的思路在写代码，但是会发现在Activity中会有大量的业务逻辑冗余在其中，这是因为Activity在MVC中扮演的Controller的角色，而Android架构本身的原因，需要在主线程根据接口返回的数据绘制的View上，导致View与Model产生了过多的联系很多操作都耦合在了Activity中，不论是看起来还是写起来既不好看也不好维护，比较理想的情况是View层里面应用只关心UI之间的交互，而不应该直接的Model产生联系。而MVP的核心思想就是不让View和Model直接关联，而是通过Presenter贯穿两者之间。</p>
+<p>可以看出MVP的优点：</p>
+<ul>
+<li>思路会比较的清晰，因为每个部分都彼此分离，模块之间的耦合度减小；</li>
+<li>View和Model分离，通过Presenter相互关联，在Presenter中负责大部分的业务逻辑；</li>
+<li>在Presenter中可以更好的对Model进行相关的操作；</li>
+<li>更好的实现模块化，方便写测试用例；</li>
+</ul>
+<p>当然也有它的劣势的地方：</p>
+<ul>
+<li>容易导致在Presenter中做过多的工作，看起来比较冗余；</li>
+<li>过多的接口会显得代码量增大；</li>
+</ul>
+<h2 id="EasyMvpBuilder"><a href="#EasyMvpBuilder" class="headerlink" title="EasyMvpBuilder"></a>EasyMvpBuilder</h2><p>在接下来的工程里我会调用豆瓣一个的Api来说明这个过程，各位同学们可以先把<a href="https://github.com/AlexMagic/EasyMvpBuilder" target="_blank" rel="external">EasyMvpBuilder</a>这个工程clone下来看看。</p>
+<h3 id="easy-mvp"><a href="#easy-mvp" class="headerlink" title="easy_mvp"></a>easy_mvp</h3><p>首先看一下easy_mvp这个module的包结构：<br><img src="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp.png?raw=true" alt=""></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">- base : View和Presenter的基本接口</div><div class="line">- interactor : 交互器集合，用来处理网络交互的过程</div><div class="line">- model : 基本模型</div><div class="line">- net : </div><div class="line">  - api:处理网络请求</div><div class="line">  - okHttp:对okHttp请求和响应数据的封装</div><div class="line">- utils :工具包</div></pre></td></tr></table></figure>
+<p>以下是该框架用到的第三方的库</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">compile &apos;com.google.code.gson:gson:2.3.1&apos;</div><div class="line">compile &apos;com.squareup.okhttp:okhttp:2.5.0&apos;</div><div class="line">compile &apos;io.reactivex:rxjava:1.0.14&apos;</div><div class="line">compile &apos;io.reactivex:rxandroid:1.0.1&apos;</div></pre></td></tr></table></figure>
+<h3 id="代码说明"><a href="#代码说明" class="headerlink" title="代码说明"></a>代码说明</h3><p>base下是两个接口，这两个接口分别是Presenter和View基类，都定义了一些方法。</p>
+<p><strong>net:</strong></p>
+<p>在api包下ApiConnection封装了okHttp的请求过程，<br><img src="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp_apiconnect.png?raw=true" alt=""><br>Api是个抽象类，里面的主要的工作就是实现对网络接口的请求，定义了一个抽象方法getResponseData()，而ApiDefaultResponseImpl则是这个抽象类的实现类。<br><img src="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp_api.png?raw=true" alt=""><br><img src="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp_default_api.png?raw=true" alt=""></p>
+<p><strong>interactor:</strong></p>
+<p>这个部分的工作就是用来启动一次访问数据的操作的，定义一个抽象类UseCase。<br><img src="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp_usecase.png?raw=true" alt=""><br>里面抽象了一个方法buildUseCaseObservable(Class clz)，DefaultUseCase有具体实现的方法。<br><img src="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_mvp_default_usecase.png?raw=true" alt=""></p>
+<p>至此就是这个module所做的所有工作，利用了Rxjava，在数据类型的转化上面看起来就非常的简单，下面一个部分就会讲述一下一次简单的接口访问的过程。</p>
+<h3 id="app"><a href="#app" class="headerlink" title="app"></a>app</h3><p><img src="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/easy_app.png?raw=true" alt=""></p>
+<p>本次例子调用的豆瓣v2的搜索图书的接口，为了简单和方便，我把要搜索的内容写死为“python入门”，估计是因为本人近期在学习机器学习方面的知识，所有脑袋第一时间想的就是python……到这里就要开始对mvp的具体实现了，首先看到我们熟悉的Activity：<br><img src="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/app_activity.png?raw=true" alt=""><br>它实现了一个BooksView的接口，实际上这个接口继承自BaseView，在onCreate()里面对SearchBooksPresenter进行实例化，并把当前的view引用传进去，接下来就来到了比较重要的Presenter了，在这里你们能看到它是如何将View和Model关联起来的：<br><img src="https://github.com/AlexMagic/SimpleResources/blob/master/EasyMvpBuilder/app_presenter.png?raw=true" alt=""><br>这个类实现了BasePresenter的接口，并且包含了BooksView的引用，在getDoubanBooks()这个方法里面，通过上述提到的DefaultUseCase发起请求，并在DoubanBookSubscriber中实现对Model的回调同时对View进行相关的操作，这里就是把书单都展示出来。</p>
+<p>到这里整个主要的过程都已经讲述完毕，从结构上看起来还是比较清晰的，在Activity中你只需要关心View的逻辑，而在数据上也只要去实现如果获取，剩下的就由Presenter来做了。</p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>经过一段时间的学习，我个人还是比较喜欢MVP的模式，虽然会有一些缺点，但总体而言还是不错的思想，这次写的例子还有很多可以丰富的地方，日后会慢慢加上，如果大家觉得写的还行欢迎star一下，觉得哪里写的不太好也希望大家能够指出，共同学习。</p>
+<p>最后还是要感谢一位大神的文章<a href="https://fernandocejas.com/2014/09/03/architecting-android-the-clean-way/" target="_blank" rel="external">architecting-android-the-clean-way</a>，我也是从这篇文章开始学习MVP这种架构的，同时里面也用到了很多目前很流行的库比如Rxjava，dagger2等。</p>
+<p>感谢各位看到最后。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/01/12/Android-异步消息处理机制/" rel="prev" title="Android 异步消息处理机制">
+                Android 异步消息处理机制 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/11/10/基于MVP模式搭建Android应用/"
+           data-title="基于MVP模式搭建的Android应用" data-url="http://AlexMagic.github.io/2016/11/10/基于MVP模式搭建Android应用/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Alex Chen</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"alexgo"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+      
+      <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+      <script src="/js/src/hook-duoshuo.js?v=5.1.0"></script>
+    
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+</body>
+</html>
