@@ -257,6 +257,188 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://AlexMagic.github.io/2017/03/15/插件化入门：Binder/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Alex Chen">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Alex's Blogs">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/03/15/插件化入门：Binder/" itemprop="url">
+                  插件化入门：Binder
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-03-15T10:22:52+08:00">
+                2017-03-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/插件化/" itemprop="url" rel="index">
+                    <span itemprop="name">插件化</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/03/15/插件化入门：Binder/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/03/15/插件化入门：Binder/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>今天想讲一下关于Binder方面的内容，Binder机制对于理解插件化的实现有着重要的意义，虽然Binder也是插件化的入门之一，但是Binder本身就是一个比较深奥的东西，想要入门还是得花些功夫，有过了解的朋友们应该都知道Binder在Android中扮演着十分重要的角色。</p>
+<p>Android为我们提供了很多系统服务给应用赋予了任务管理，音视频等强大的功能，这些系统服务在上层和底层的通讯机制都是基于Binder实现的。在插件化的实现过程中，对系统服务的Hook是比较关键的一环，因此，理解Binder的机制就十分关键，虽然这是一块硬骨头。在我查阅资料的过程中有这么两篇介绍Binder方面的文章各人觉得写的比较不错的：</p>
+<ul>
+<li><a href="http://blog.csdn.net/universus/article/details/6211589" target="_blank" rel="external">Android Binder设计与实现 - 设计篇</a></li>
+<li><a href="http://weishu.me/2016/01/12/binder-index-for-newer/" target="_blank" rel="external">Binder学习指南</a></li>
+</ul>
+<p>Binder这个东西对于初学者是真不太好懂，在学习的过程中会有很多好无头绪压根看不懂的内容，学习这一部分并有快捷方式，只能硬啃。当然你们可以放心，本文不会深入的讲解底层源码，当然我也讲不了… 但是基本的概念以及在Java层中的AIDL是必须要了解甚至要比较熟练的。所以这篇文章主要会讲一下Binder的基本模型以及如何利用AIDL实现跨进程通讯的。</p>
+<h2 id="Binder通讯模型"><a href="#Binder通讯模型" class="headerlink" title="Binder通讯模型"></a>Binder通讯模型</h2><p>大家应该知道，对于每一个应用程序都是运行在自己的进程进程空间的，但是在Android平台上，一个进程通常是不能访问另外一个进程空间的，那么如果想要两个应用之间能够产生某种关联就需要一种机制能够让进程间实现通讯，即IPC，在Android中这种机制就是Binder。</p>
+<p>Android中的Binder为系统提供了一种CS通信的机制，使得多个进程中的Client可以向Server发出请求；通常，Client中会提供一个本地Binder的引用，也可以看作是Server Binder的代理，在本地代表远端Server为Client提供系统的服务。</p>
+<p>Binder框架定义了四个角色：Server，Client，ServiceManager，Binder驱动，其中，前三个角色运行在用户空间，驱动则在内核空间，其中：</p>
+<p>ServiceManager会将以字符形式的Binder名称转化为Client中的Binder引用，使得Client能够通过Binder名获得对应Server中Binder实体的引用。注册了名字的Binder叫做实名Binder。Server创建了Binder实体，为其命名一个字符串，将这个Binder通过Binder驱动发给SMgr，通知SMgr注册一个命名xxx的实体引用，并保存在一张查找表中。</p>
+<p>Server向SMgr注册了Binder实体和对应的名称后，Client就可以通过这个名字获得该Binder的引用。Client也利用保留的0号引用向SMgr请求访问某个Binder，SMgr通过这个请求在查找表中找到这个名字对应的Binder的引用，在把这个引用返回给Clinet。</p>
+<h4 id="Binder在应用程序中的表述"><a href="#Binder在应用程序中的表述" class="headerlink" title="Binder在应用程序中的表述"></a>Binder在应用程序中的表述</h4><p>Binder本质只是一种底层通讯方式，和具体服务没有关系。为了提供具体服务，Server必须提供一套接口函数以便Client通过远程访问使用各种服务。这时通常采用代理模式：将接口函数定义在一个抽象类中，Server和Client都会以该抽象类为基类实现所有接口函数，所不同的是Server端是真正的功能实现，而Client端是对这些函数远程调用请求的包装。如何将Binder和Proxy设计模式结合起来是应用程序实现面向对象Binder通信的根本问题。</p>
+<h2 id="Java层中的Binder"><a href="#Java层中的Binder" class="headerlink" title="Java层中的Binder"></a>Java层中的Binder</h2><p>接下来通过一个简单的AIDL的例子来阐述在Java层中Binder的机制：</p>
+<p>首先我们先创建一个IMyAidlInterface.aidl文件定义一些方法表示这个接口的一些行为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">interface</span> <span class="title">IMyAidlInterface</span></span></div><div class="line">&#123;</div><div class="line"><span class="comment">/**</span></div><div class="line">* Demonstrates some basic types that you can use as parameters</div><div class="line">* and return values in AIDL.</div><div class="line">*/</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">plus</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span>;</div><div class="line"><span class="function">String <span class="title">toUpperCase</span><span class="params">(String str)</span></span>;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>通过编译工具编译之后，系统会自动生成一个IMyAidlInterface这个接口的java文件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/*</span></div><div class="line"> * This file is auto-generated.  DO NOT MODIFY.</div><div class="line"> * Original file: F:\\Users\\Dell\\AndroidStudioProjects\\MyApplication\\app\\src\\main\\aidl\\com\\example\\chenkaining\\myapplication\\IMyAidlInterface.aidl</div><div class="line"> */</div><div class="line"><span class="keyword">package</span> com.example.chenkaining.myapplication;</div><div class="line"><span class="comment">// Declare any non-default types here with import statements</span></div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">IMyAidlInterface</span> <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">os</span>.<span class="title">IInterface</span></span></div><div class="line">&#123;</div><div class="line"><span class="comment">/** Local-side IPC implementation stub class. */</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Stub</span> <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">os</span>.<span class="title">Binder</span> <span class="keyword">implements</span> <span class="title">com</span>.<span class="title">example</span>.<span class="title">chenkaining</span>.<span class="title">myapplication</span>.<span class="title">IMyAidlInterface</span></span></div><div class="line">&#123;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> java.lang.String DESCRIPTOR = <span class="string">"com.example.chenkaining.myapplication.IMyAidlInterface"</span>;</div><div class="line"><span class="comment">/** Construct the stub at attach it to the interface. */</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">Stub</span><span class="params">()</span></span></div><div class="line">&#123;</div><div class="line"><span class="keyword">this</span>.attachInterface(<span class="keyword">this</span>, DESCRIPTOR);</div><div class="line">&#125;</div><div class="line"><span class="comment">/**</span></div><div class="line"> * Cast an IBinder object into an com.example.chenkaining.myapplication.IMyAidlInterface interface,</div><div class="line"> * generating a proxy if needed.</div><div class="line"> */</div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> com.example.chenkaining.myapplication.<span class="function">IMyAidlInterface <span class="title">asInterface</span><span class="params">(android.os.IBinder obj)</span></span></div><div class="line">&#123;</div><div class="line"><span class="keyword">if</span> ((obj==<span class="keyword">null</span>)) &#123;</div><div class="line"><span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">&#125;</div><div class="line">    android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);</div><div class="line">    <span class="keyword">if</span> (((iin!=<span class="keyword">null</span>)&amp;&amp;(iin <span class="keyword">instanceof</span> com.example.chenkaining.myapplication.IMyAidlInterface))) &#123;</div><div class="line"><span class="keyword">return</span> ((com.example.chenkaining.myapplication.IMyAidlInterface)iin);</div><div class="line">&#125;</div><div class="line"><span class="keyword">return</span> <span class="keyword">new</span> com.example.chenkaining.myapplication.IMyAidlInterface.Stub.Proxy(obj);</div><div class="line">&#125;</div><div class="line"><span class="meta">@Override</span> <span class="keyword">public</span> android.os.<span class="function">IBinder <span class="title">asBinder</span><span class="params">()</span></span></div><div class="line">&#123;</div><div class="line"><span class="keyword">return</span> <span class="keyword">this</span>;</div><div class="line">&#125;</div><div class="line"><span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTransact</span><span class="params">(<span class="keyword">int</span> code, android.os.Parcel data, android.os.Parcel reply, <span class="keyword">int</span> flags)</span> <span class="keyword">throws</span> android.os.RemoteException</span></div><div class="line">&#123;</div><div class="line"><span class="keyword">switch</span> (code)</div><div class="line">&#123;</div><div class="line"><span class="keyword">case</span> INTERFACE_TRANSACTION:</div><div class="line">&#123;</div><div class="line">reply.writeString(DESCRIPTOR);</div><div class="line"><span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">&#125;</div><div class="line"><span class="keyword">case</span> TRANSACTION_plus:</div><div class="line">&#123;</div><div class="line">data.enforceInterface(DESCRIPTOR);</div><div class="line"><span class="keyword">int</span> _arg0;</div><div class="line">_arg0 = data.readInt();</div><div class="line"><span class="keyword">int</span> _arg1;</div><div class="line">_arg1 = data.readInt();</div><div class="line"><span class="keyword">int</span> _result = <span class="keyword">this</span>.plus(_arg0, _arg1);</div><div class="line">reply.writeNoException();</div><div class="line">reply.writeInt(_result);</div><div class="line"><span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">&#125;</div><div class="line"><span class="keyword">case</span> TRANSACTION_toUpperCase:</div><div class="line">&#123;</div><div class="line">data.enforceInterface(DESCRIPTOR);</div><div class="line">java.lang.String _arg0;</div><div class="line">_arg0 = data.readString();</div><div class="line">java.lang.String _result = <span class="keyword">this</span>.toUpperCase(_arg0);</div><div class="line">reply.writeNoException();</div><div class="line">reply.writeString(_result);</div><div class="line"><span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">&#125;</div><div class="line">&#125;</div><div class="line"><span class="keyword">return</span> <span class="keyword">super</span>.onTransact(code, data, reply, flags);</div><div class="line">&#125;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Proxy</span> <span class="keyword">implements</span> <span class="title">com</span>.<span class="title">example</span>.<span class="title">chenkaining</span>.<span class="title">myapplication</span>.<span class="title">IMyAidlInterface</span></span></div><div class="line">&#123;</div><div class="line"><span class="keyword">private</span> android.os.IBinder mRemote;</div><div class="line">Proxy(android.os.IBinder remote)</div><div class="line">&#123;</div><div class="line">mRemote = remote;</div><div class="line">&#125;</div><div class="line"><span class="meta">@Override</span> <span class="keyword">public</span> android.os.<span class="function">IBinder <span class="title">asBinder</span><span class="params">()</span></span></div><div class="line">&#123;</div><div class="line"><span class="keyword">return</span> mRemote;</div><div class="line">&#125;</div><div class="line"><span class="keyword">public</span> java.lang.<span class="function">String <span class="title">getInterfaceDescriptor</span><span class="params">()</span></span></div><div class="line">&#123;</div><div class="line"><span class="keyword">return</span> DESCRIPTOR;</div><div class="line">&#125;</div><div class="line"><span class="comment">/**</span></div><div class="line">     * Demonstrates some basic types that you can use as parameters</div><div class="line">     * and return values in AIDL.</div><div class="line">     */</div><div class="line"><span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">plus</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> <span class="keyword">throws</span> android.os.RemoteException</span></div><div class="line">&#123;</div><div class="line">android.os.Parcel _data = android.os.Parcel.obtain();</div><div class="line">android.os.Parcel _reply = android.os.Parcel.obtain();</div><div class="line"><span class="keyword">int</span> _result;</div><div class="line"><span class="keyword">try</span> &#123;</div><div class="line">_data.writeInterfaceToken(DESCRIPTOR);</div><div class="line">_data.writeInt(a);</div><div class="line">_data.writeInt(b);</div><div class="line">mRemote.transact(Stub.TRANSACTION_plus, _data, _reply, <span class="number">0</span>);</div><div class="line">_reply.readException();</div><div class="line">_result = _reply.readInt();</div><div class="line">&#125;</div><div class="line"><span class="keyword">finally</span> &#123;</div><div class="line">_reply.recycle();</div><div class="line">_data.recycle();</div><div class="line">&#125;</div><div class="line"><span class="keyword">return</span> _result;</div><div class="line">&#125;</div><div class="line"><span class="meta">@Override</span> <span class="keyword">public</span> java.lang.<span class="function">String <span class="title">toUpperCase</span><span class="params">(java.lang.String str)</span> <span class="keyword">throws</span> android.os.RemoteException</span></div><div class="line">&#123;</div><div class="line">android.os.Parcel _data = android.os.Parcel.obtain();</div><div class="line">android.os.Parcel _reply = android.os.Parcel.obtain();</div><div class="line">java.lang.String _result;</div><div class="line"><span class="keyword">try</span> &#123;</div><div class="line">_data.writeInterfaceToken(DESCRIPTOR);</div><div class="line">_data.writeString(str);</div><div class="line">mRemote.transact(Stub.TRANSACTION_toUpperCase, _data, _reply, <span class="number">0</span>);</div><div class="line">_reply.readException();</div><div class="line">_result = _reply.readString();</div><div class="line">&#125;</div><div class="line"><span class="keyword">finally</span> &#123;</div><div class="line">_reply.recycle();</div><div class="line">_data.recycle();</div><div class="line">&#125;</div><div class="line"><span class="keyword">return</span> _result;</div><div class="line">&#125;</div><div class="line">&#125;</div><div class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TRANSACTION_plus = (android.os.IBinder.FIRST_CALL_TRANSACTION + <span class="number">0</span>);</div><div class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TRANSACTION_toUpperCase = (android.os.IBinder.FIRST_CALL_TRANSACTION + <span class="number">1</span>);</div><div class="line">&#125;</div><div class="line"><span class="comment">/**</span></div><div class="line">     * Demonstrates some basic types that you can use as parameters</div><div class="line">     * and return values in AIDL.</div><div class="line">     */</div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">plus</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> <span class="keyword">throws</span> android.os.RemoteException</span>;</div><div class="line"><span class="keyword">public</span> java.lang.<span class="function">String <span class="title">toUpperCase</span><span class="params">(java.lang.String str)</span> <span class="keyword">throws</span> android.os.RemoteException</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到这个java中生成了一个抽象类Stub，而且是Binder的子类，通常会去实现这个类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">IMyAidlInterface.Stub mBinder = <span class="keyword">new</span> IMyAidlInterface.Stub() &#123;</div><div class="line">	<span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">plus</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> <span class="keyword">throws</span> RemoteException </span>&#123;</div><div class="line">		<span class="keyword">return</span> a+b;</div><div class="line">	&#125;</div><div class="line">	</div><div class="line">	<span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> String <span class="title">toUpperCase</span><span class="params">(String str)</span> <span class="keyword">throws</span> RemoteException </span>&#123;</div><div class="line">	<span class="keyword">if</span>(str != <span class="keyword">null</span>) <span class="keyword">return</span> str.toUpperCase();</div><div class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">	&#125;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>然后在自己的Service里的onBind方法中返回。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> IBinder <span class="title">onBind</span><span class="params">(Intent intent)</span> </span>&#123;</div><div class="line">	<span class="keyword">return</span> mBinder;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个Binder的实例可以看做是服务端，注释中说明它是一个本地对象，同时实现了IMyAidlInterface接口，这个接口继承了IInterface，这个接口是所有Binder的传输的过程中都要实现的，Stub的内部还有一个Proxy，这是Binder的代理对象。在绑定一定Service的时候还需要传入ServiceConnection：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> ServiceConnection connection = <span class="keyword">new</span> ServiceConnection() &#123;</div><div class="line"></div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onServiceDisconnected</span><span class="params">(ComponentName name)</span> </span>&#123;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">	<span class="meta">@Override</span></div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onServiceConnected</span><span class="params">(ComponentName name, IBinder service)</span> </span>&#123;</div><div class="line">		iMyAidlInterface = IMyAidlInterface.Stub.asInterface(service);</div><div class="line">	</div><div class="line">    	<span class="keyword">try</span> &#123;</div><div class="line">			<span class="keyword">int</span> result = iMyAidlInterface.plus(<span class="number">1</span>, <span class="number">2</span>);</div><div class="line">			String str = iMyAidlInterface.toUpperCase(<span class="string">"hello world!"</span>);</div><div class="line">			Log.d(<span class="string">"TAG"</span>, <span class="string">"result is "</span> + result);</div><div class="line">			Log.d(<span class="string">"TAG"</span>, <span class="string">"upperStr is "</span> + str);</div><div class="line">		&#125; <span class="keyword">catch</span> (RemoteException e) &#123;</div><div class="line">		            e.printStackTrace();</div><div class="line">		&#125;</div><div class="line">    &#125;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>onServiceConnected中的IBinder实例，其实就是我们文章开通所说的Binder驱动，也是一个Binder实例。接着再看到IMyAidlInterface.Stub.asInterface这个方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> com.example.chenkaining.myapplication.<span class="function">IMyAidlInterface <span class="title">asInterface</span><span class="params">(android.os.IBinder obj)</span></span></div><div class="line">&#123;</div><div class="line"><span class="keyword">if</span> ((obj==<span class="keyword">null</span>)) &#123;</div><div class="line"><span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">&#125;</div><div class="line">android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);</div><div class="line"><span class="keyword">if</span> (((iin!=<span class="keyword">null</span>)&amp;&amp;(iin <span class="keyword">instanceof</span> com.example.chenkaining.myapplication.IMyAidlInterface))) &#123;</div><div class="line"><span class="keyword">return</span> ((com.example.chenkaining.myapplication.IMyAidlInterface)iin);</div><div class="line">&#125;</div><div class="line"><span class="keyword">return</span> <span class="keyword">new</span> com.example.chenkaining.myapplication.IMyAidlInterface.Stub.Proxy(obj);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个方法根据obj，实际上是一个Binder驱动对象，如果从服务端接收到的Binder是本地对象，则它就是mBinder，否则会new一个Binder的代理对象，这个Proxy实例会传入了我们的Binder驱动，并且封装了我们调用服务端的代码，客户端会通过Binder驱动的transact()方法调用服务端代码。</p>
+<p>到此，我们已经通过AIDL生成的代码解释了Android Binder框架的工作原理。Service的作用其实就是为我们创建Binder驱动，即服务端与客户端连接的桥梁。</p>
+<p>AIDL其实通过我们写的aidl文件，帮助我们生成了一个接口，一个Stub类用于服务端，一个Proxy类用于客户端调用。</p>
+<p>对于一个应用启动之后会初始化所有的系统提供的服务，而这些服务都是以Binder的形式存在的，具体可以找到SystemServiceRegistry这个类，这些服务都在静态块中实现注册，我拿注册AccountManagerService举个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">registerService(Context.ACCOUNT_SERVICE, AccountManager.class,</div><div class="line">                <span class="keyword">new</span> CachedServiceFetcher&lt;AccountManager&gt;() &#123;</div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> AccountManager <span class="title">createService</span><span class="params">(ContextImpl ctx)</span> </span>&#123;</div><div class="line">                IBinder b = ServiceManager.getService(Context.ACCOUNT_SERVICE);</div><div class="line">                IAccountManager service = IAccountManager.Stub.asInterface(b);</div><div class="line">                <span class="keyword">return</span> <span class="keyword">new</span> AccountManager(ctx, service);</div><div class="line">            &#125;&#125;);</div></pre></td></tr></table></figure>
+<p>这里可以清楚的看到通过ServiceManager先拿到Binder驱动，然后通过asInterface获取Binder对象，返回的AccountManager是AccountManagerService的管理类。</p>
+<p>本文关于Binder的介绍到这里就结束了，这只是对Binder比较简单的介绍，想要更加深入的学习Binder可以往底层的模块学习。在DroidPlugin里做了大量的Binder Hook的工作，因此学习Binder能够更好理解插件化框架中的实现过程。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://AlexMagic.github.io/2017/03/13/插件化入门：动态代理，反射/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
